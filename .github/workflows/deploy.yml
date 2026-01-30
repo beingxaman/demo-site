@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # 👇 This links the job to the environment
-    environment: production
+    environment: <h1>production
 
     steps:
       - name: Checkout code
