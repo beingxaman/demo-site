@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CSPT Single File Lab</title>
+  <title>CSPT Lab (URL Based)</title>
   <style>
     body { font-family: Arial; }
     button { margin: 5px; }
@@ -17,56 +17,57 @@
 
 <h2>User Dashboard (CSPT Lab)</h2>
 
-<button onclick="loadTab('profile')">Profile</button>
-<button onclick="loadTab('settings')">Settings</button>
+<button onclick="navigate('profile')">Profile</button>
+<button onclick="navigate('settings')">Settings</button>
 
 <div id="content">Content will load here…</div>
 
 <script>
-/*
-  Simulating server files in JS
-  Key = path
-  Value = HTML content
-*/
+/* Simulated server files */
 const FILE_SYSTEM = {
   "/pages/profile.html": "<h3>Profile Page</h3><p>Normal user profile</p>",
   "/pages/settings.html": "<h3>Settings Page</h3><p>User settings</p>",
-  "/pages/admin.html": "<h3 class='admin'>Admin Panel</h3><p>❌ Should not be accessible</p>",
+  "/pages/admin.html": "<h3 class='admin'>Admin Panel</h3><p>❌ Unauthorized</p>",
   "/internal/config.html": "<h3>Internal Config</h3><p>API_KEY = secret-123</p>"
 };
 
-// 🚨 Vulnerable path resolver (like browser does)
-function resolvePath(base, userInput) {
-  const fullPath = base + userInput + ".html";
-  const parts = [];
+/* Vulnerable resolver */
+function resolvePath(base, input) {
+  const full = base + input + ".html";
+  const stack = [];
 
-  fullPath.split("/").forEach(p => {
-    if (p === "..") parts.pop();
-    else if (p !== "" && p !== ".") parts.push(p);
+  full.split("/").forEach(p => {
+    if (p === "..") stack.pop();
+    else if (p && p !== ".") stack.push(p);
   });
 
-  return "/" + parts.join("/");
+  return "/" + stack.join("/");
 }
 
-// 🚨 CSPT vulnerable function
-function loadTab(tab) {
+/* URL update + CSPT */
+function navigate(tab) {
+  // URL CHANGE 🔥
+  history.pushState({}, "", "?tab=" + tab);
+  load(tab);
+}
+
+function load(tab) {
   const path = resolvePath("/pages/", tab);
-  console.log("Requested path:", path);
+  console.log("Resolved path:", path);
 
-  if (FILE_SYSTEM[path]) {
-    document.getElementById("content").innerHTML = FILE_SYSTEM[path];
-  } else {
-    document.getElementById("content").innerHTML =
-      "<p style='color:red'>404 - File Not Found</p>";
-  }
+  document.getElementById("content").innerHTML =
+    FILE_SYSTEM[path] || "<p style='color:red'>404 - Not Found</p>";
 }
 
-// Load from URL parameter
-const params = new URLSearchParams(window.location.search);
-const tab = params.get("tab");
-if (tab) {
-  loadTab(tab);
-}
+/* Handle back / forward */
+window.onpopstate = () => {
+  const tab = new URLSearchParams(location.search).get("tab");
+  if (tab) load(tab);
+};
+
+/* Initial load */
+const initialTab = new URLSearchParams(location.search).get("tab");
+if (initialTab) load(initialTab);
 </script>
 
 </body>
