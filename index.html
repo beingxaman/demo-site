@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSPT Single File Lab</title>
+  <style>
+    body { font-family: Arial; }
+    button { margin: 5px; }
+    #content {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .admin { color: red; }
+  </style>
+</head>
+<body>
+
+<h2>User Dashboard (CSPT Lab)</h2>
+
+<button onclick="loadTab('profile')">Profile</button>
+<button onclick="loadTab('settings')">Settings</button>
+
+<div id="content">Content will load here…</div>
+
+<script>
+/*
+  Simulating server files in JS
+  Key = path
+  Value = HTML content
+*/
+const FILE_SYSTEM = {
+  "/pages/profile.html": "<h3>Profile Page</h3><p>Normal user profile</p>",
+  "/pages/settings.html": "<h3>Settings Page</h3><p>User settings</p>",
+  "/pages/admin.html": "<h3 class='admin'>Admin Panel</h3><p>❌ Should not be accessible</p>",
+  "/internal/config.html": "<h3>Internal Config</h3><p>API_KEY = secret-123</p>"
+};
+
+// 🚨 Vulnerable path resolver (like browser does)
+function resolvePath(base, userInput) {
+  const fullPath = base + userInput + ".html";
+  const parts = [];
+
+  fullPath.split("/").forEach(p => {
+    if (p === "..") parts.pop();
+    else if (p !== "" && p !== ".") parts.push(p);
+  });
+
+  return "/" + parts.join("/");
+}
+
+// 🚨 CSPT vulnerable function
+function loadTab(tab) {
+  const path = resolvePath("/pages/", tab);
+  console.log("Requested path:", path);
+
+  if (FILE_SYSTEM[path]) {
+    document.getElementById("content").innerHTML = FILE_SYSTEM[path];
+  } else {
+    document.getElementById("content").innerHTML =
+      "<p style='color:red'>404 - File Not Found</p>";
+  }
+}
+
+// Load from URL parameter
+const params = new URLSearchParams(window.location.search);
+const tab = params.get("tab");
+if (tab) {
+  loadTab(tab);
+}
+</script>
+
+</body>
+</html>
