@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSPT → IDOR Lab</title>
+  <style>
+    body { font-family: Arial; }
+    button { margin: 5px; }
+    #content { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+    .admin { color: red; }
+  </style>
+</head>
+<body>
+
+<h2>Dashboard (CSPT → IDOR)</h2>
+
+<button onclick="navigate('profile')">My Profile</button>
+<button onclick="navigate('settings')">Settings</button>
+
+<div id="content">Loading…</div>
+
+<script>
+/* =======================
+   Simulated Server Data
+======================= */
+
+// USER DATABASE (IDOR target)
+const USER_DATA = {
+  "1001": { name: "Aman", role: "user", email: "aman@site.com" },
+  "9999": { name: "Admin", role: "admin", email: "admin@site.com" }
+};
+
+// FILE SYSTEM (CSPT entry)
+const FILE_SYSTEM = {
+  "/pages/profile.html": `
+    <h3>My Profile</h3>
+    <button onclick="loadUser('1001')">View My Data</button>
+  `,
+
+  "/pages/settings.html": `
+    <h3>Settings</h3>
+    <p>Nothing interesting here</p>
+  `,
+
+  "/pages/admin.html": `
+    <h3 class="admin">Admin Panel</h3>
+    <button onclick="loadUser('9999')">View Admin Data</button>
+  `,
+
+  "/internal/admin.html": `
+    <h3 class="admin">INTERNAL ADMIN</h3>
+    <button onclick="loadUser('9999')">Load Admin Account</button>
+  `
+};
+
+/* =======================
+   CSPT LOGIC
+======================= */
+
+function resolvePath(base, input) {
+  const full = base + input + ".html";
+  const stack = [];
+
+  full.split("/").forEach(p => {
+    if (p === "..") stack.pop();
+    else if (p && p !== ".") stack.push(p);
+  });
+
+  return "/" + stack.join("/");
+}
+
+function navigate(tab) {
+  history.pushState({}, "", "?tab=" + tab);
+  load(tab);
+}
+
+function load(tab) {
+  const path = resolvePath("/pages/", tab);
+  console.log("Resolved path:", path);
+
+  document.getElementById("content").innerHTML =
+    FILE_SYSTEM[path] || "<p style='color:red'>404</p>";
+}
+
+/* =======================
+   IDOR LOGIC
+======================= */
+
+function loadUser(userId) {
+  // 🚨 NO AUTH CHECK
+  const user = USER_DATA[userId];
+
+  if (!user) {
+    alert("User not found");
+    return;
+  }
+
+  document.getElementById("content").innerHTML = `
+    <h3>User Data</h3>
+    <p><b>ID:</b> ${userId}</p>
+    <p><b>Name:</b> ${user.name}</p>
+    <p><b>Role:</b> ${user.role}</p>
+    <p><b>Email:</b> ${user.email}</p>
+  `;
+}
+
+/* Initial load */
+const t = new URLSearchParams(location.search).get("tab");
+if (t) load(t);
+</script>
+
+</body>
+</html>
